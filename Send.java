@@ -10,6 +10,7 @@ public class Send {
     private static final String EXCHANGE_NAME = "broadcast";
 
     public static void main(String[] argv) throws Exception {
+
         Client cl = new Client("teste");
         cl.prepareBroadcast();
         cl.menuDisplay();

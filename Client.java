@@ -13,7 +13,7 @@ import java.util.Scanner;
 
 public class Client {
     //private final long PID;//apenas para fins de nomeação
-    private final String PID;
+    private final String PID; //o pid por enquanto vai ser usado como um nome/identificador
     private Channel channel;//faz conexão do broker
 
     Client(String name) throws Exception {
@@ -56,7 +56,7 @@ public class Client {
 
     public void prepareBroadcast() throws Exception{
         //preparar uma fila para receber o broadcast
-        String queueName = PID + "broadcast";
+        String queueName = PID + "@" + "broadcast";
         //declara a fila
         this.channel.queueDeclare(queueName, false, false, false, null);
         //anexa a filaa exchange "broadcast"
@@ -72,6 +72,33 @@ public class Client {
 
         //vai consumir as mensagens de forma assíncrona
         channel.basicConsume(queueName, false, deliverCallback, consumerTag -> { });
+    }
+
+    /*checar passive declaration, que verifica se algo existe ou não*/
+
+    public void prepareDirectMessage() throws  Exception{
+        //declara fila só para ele, para receber mensagens diretamente
+        this.channel.queueDeclare(this.PID, false, false, false, null);
+
+
+        //função que executara para consumir a mensagem
+        DeliverCallback deliverCallback = (consumerTag, delivery) -> {
+            String message = new String(delivery.getBody(), "UTF-8");
+            System.out.println(" [x] Received direct '" + message + "'");
+        };
+
+
+        //vai consumir as mensagens de forma assíncrona
+        channel.basicConsume(this.PID, false, deliverCallback, consumerTag -> { });
+    }
+
+    public void sendDirectMessage(String user, String messagem) throws Exception {
+        String QUEUE_NAME = user;
+        channel.queueDeclare(QUEUE_NAME, false, false, false, null);
+        String message = messagem;
+        //envia diretamente para a fila
+        channel.basicPublish("", QUEUE_NAME, null, message.getBytes());
+        System.out.println(" [x] Sent '" + message + "'");
     }
 
 
