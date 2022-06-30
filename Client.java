@@ -4,6 +4,7 @@ import com.rabbitmq.client.ConnectionFactory;
 import com.rabbitmq.client.DeliverCallback;
 
 /*pegar PID*/
+import java.io.*;
 import java.lang.management.ManagementFactory;
 import java.lang.management.RuntimeMXBean;
 
@@ -16,6 +17,8 @@ public class Client {
     private final String PID; //o pid por enquanto vai ser usado como um nome/identificador
     private Channel channel;//faz conexão do broker
 
+    private File history;
+
     Client(String name) throws Exception {
         /*RuntimeMXBean bean = ManagementFactory.getRuntimeMXBean();
         String jvmName = bean.getName();//formato: 35656@Krakatau
@@ -24,6 +27,11 @@ public class Client {
         this.PID = name;
         this.channel = connectServer("localhost"); //inicializa a conexão e conecta com o broker
 
+        history = new File(this.PID+"History.txt");
+        //caso o arquivo não exista, cria ele
+        if(!history.exists()){
+            history.createNewFile();
+        }
     }
 
     public Channel connectServer(String server) throws Exception{
@@ -31,7 +39,6 @@ public class Client {
         factory.setHost(server);
         Connection connection = factory.newConnection();
         /*Channel channel = connection.createChannel();*/
-
         return connection.createChannel();
     }
 
@@ -68,7 +75,18 @@ public class Client {
         //função que executara para consumir a mensagem
         DeliverCallback deliverCallback = (consumerTag, delivery) -> {
             String message = new String(delivery.getBody(), "UTF-8");
-            System.out.println(" [x] Received '" + message + "'");
+//            System.out.println(" [x] Received '" + message + "'");
+
+            try {
+                //escreve num arquivo
+                FileWriter fw = new FileWriter(this.history, false);
+                fw.write("broadcast: " + message + "\n");
+                fw.flush();
+                fw.close();
+            }
+            catch (IOException ioException){
+                ioException.printStackTrace();
+            }
         };
 
         //falta fazer receber mensagens quando o send iniciar antes
@@ -79,7 +97,7 @@ public class Client {
 
     /*checar passive declaration, que verifica se algo existe ou não*/
 
-    public void prepareDirectMessage() throws  Exception{
+    public void prepareDirectMessage() throws Exception{
         //declara fila só para ele, para receber mensagens diretamente
         this.channel.queueDeclare(this.PID, false, false, false, null);
 
@@ -87,7 +105,17 @@ public class Client {
         //função que executara para consumir a mensagem
         DeliverCallback deliverCallback = (consumerTag, delivery) -> {
             String message = new String(delivery.getBody(), "UTF-8");
-            System.out.println(" [x] Received direct '" + message + "'");
+//            System.out.println(" [x] Received direct '" + message + "'");
+            try {
+                //escreve num arquivo
+                FileWriter fw = new FileWriter(this.history, false);
+                fw.write(message + "\n");
+                fw.flush();
+                fw.close();
+            }
+            catch (IOException ioException){
+                ioException.printStackTrace();
+            }
         };
 
 
@@ -98,12 +126,28 @@ public class Client {
     public void sendDirectMessage(String user, String messagem) throws Exception {
         String QUEUE_NAME = user;
         channel.queueDeclare(QUEUE_NAME, false, false, false, null);
-        String message = messagem;
+        String message = "Direct(" + this.PID + "): " + messagem;
         //envia diretamente para a fila
         channel.basicPublish("", QUEUE_NAME, null, message.getBytes());
         System.out.println(" [x] Sent '" + message + "'");
     }
 
+    public void displayMessages() throws Exception{
+        FileReader fr = new FileReader(this.history);
+        BufferedReader br = new BufferedReader( fr );
+
+        //enquanto houver mais linhas
+        while( br.ready() ){
+            //lê a proxima linha
+            String linha = br.readLine();
+            System.out.print(linha);
+            //faz algo com a linha
+        }
+
+        //fecha arquivo
+        br.close();
+        fr.close();
+    }
 
     public void menuDisplay() throws Exception{
         Scanner ler = new Scanner(System.in);
@@ -112,9 +156,13 @@ public class Client {
         String message;
 
         while(true) {
-            System.out.println("1.Enviar mensagem a todos os usuários");
-            System.out.println("2.Enviar mensagem de um tópico específico");
-            System.out.println("3.Enviar mensagem a um usuário");
+            System.out.println("Use CTRL+C para sair.");
+            System.out.println("1.Enviar mensagem a todos os usuários.");
+            System.out.println("2.Enviar mensagem de um tópico específico.");
+            System.out.println("3.Enviar mensagem a um usuário.");
+            System.out.println("4.Inscrever-se em tópicos de interesse.");
+            System.out.println("5.Mostrar Histórico de mensagens.");
+
 
             op = ler.nextInt();
             //não le o \n, então consome o \n logo depois
@@ -126,14 +174,19 @@ public class Client {
                     message = ler.nextLine();
                     sendBroadcastMessage(message);
                     break;
+
                 case 3:
                     System.out.print("Digite o nome do usuário: ");
-
                     user = ler.nextLine();
                     System.out.print("Digite a mensagem: ");
                     message = ler.nextLine();
                     sendDirectMessage(user, message);
                     break;
+
+                case 5:
+                    displayMessages();
+                    break;
+
                 default:
                     System.out.println("Opção Invalida!");
                     break;
