@@ -5,8 +5,6 @@ import com.rabbitmq.client.DeliverCallback;
 
 /*pegar PID*/
 import java.io.*;
-import java.lang.management.ManagementFactory;
-import java.lang.management.RuntimeMXBean;
 
 //ler do teclado
 import java.util.Scanner;
@@ -15,9 +13,9 @@ import java.util.Scanner;
 public class Client {
     //private final long PID;//apenas para fins de nomeação
     private final String PID; //o pid por enquanto vai ser usado como um nome/identificador
-    private Channel channel;//faz conexão do broker
+    private final Channel channel;//faz conexão do broker
 
-    private File history;
+    private final File history;
 
     Client(String name) throws Exception {
         /*RuntimeMXBean bean = ManagementFactory.getRuntimeMXBean();
@@ -158,10 +156,11 @@ public class Client {
         while(true) {
             System.out.println("Use CTRL+C para sair.");
             System.out.println("1.Enviar mensagem a todos os usuários.");
-            System.out.println("2.Enviar mensagem de um tópico específico.");
-            System.out.println("3.Enviar mensagem a um usuário.");
+            System.out.println("2.Enviar mensagem a um usuário.");
+            System.out.println("3.Enviar mensagem de um tópico específico.");
             System.out.println("4.Inscrever-se em tópicos de interesse.");
-            System.out.println("5.Mostrar Histórico de mensagens.");
+            System.out.println("5.Desmarcar interesse em tópicos.");
+            System.out.println("6.Mostrar Histórico de mensagens.");
 
 
             op = ler.nextInt();
@@ -175,7 +174,7 @@ public class Client {
                     sendBroadcastMessage(message);
                     break;
 
-                case 3:
+                case 2:
                     System.out.print("Digite o nome do usuário: ");
                     user = ler.nextLine();
                     System.out.print("Digite a mensagem: ");
@@ -183,7 +182,7 @@ public class Client {
                     sendDirectMessage(user, message);
                     break;
 
-                case 5:
+                case 6:
                     displayMessages();
                     break;
 
