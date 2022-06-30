@@ -3,6 +3,7 @@ import com.rabbitmq.client.Connection;
 import com.rabbitmq.client.ConnectionFactory;
 
 import java.nio.charset.StandardCharsets;
+import java.util.Scanner;
 
 
 public class Send {
@@ -10,9 +11,13 @@ public class Send {
     private static final String EXCHANGE_NAME = "broadcast";
 
     public static void main(String[] argv) throws Exception {
+        Scanner scan = new Scanner(System.in);
+        System.out.println("Seu Nome? ");
+        String name = scan.nextLine();
 
-        Client cl = new Client("teste");
+        Client cl = new Client(name);
         cl.prepareBroadcast();
+        cl.prepareDirectMessage();
         cl.menuDisplay();
     }
 }

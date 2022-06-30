@@ -55,8 +55,12 @@ public class Client {
     }
 
     public void prepareBroadcast() throws Exception{
+        final String EXCHANGE_NAME = "broadcast";
+        channel.exchangeDeclare(EXCHANGE_NAME, "fanout");
+        /*Quando inicia send primeiro
+        erro : channel error; protocol method: #method<channel.close>(reply-code=404, reply-text=NOT_FOUND - no exchange 'broadcast' in vhost '/', class-id=50, method-id=20)*/
         //preparar uma fila para receber o broadcast
-        String queueName = PID + "@" + "broadcast";
+        String queueName = PID + "broadcast";
         //declara a fila
         this.channel.queueDeclare(queueName, false, false, false, null);
         //anexa a filaa exchange "broadcast"
@@ -71,7 +75,7 @@ public class Client {
         //falta fazer receber mensagens quando o send iniciar antes
 
         //vai consumir as mensagens de forma assíncrona
-        channel.basicConsume(queueName, false, deliverCallback, consumerTag -> { });
+        channel.basicConsume(queueName, true, deliverCallback, consumerTag -> { });
     }
 
     /*checar passive declaration, que verifica se algo existe ou não*/
@@ -89,7 +93,7 @@ public class Client {
 
 
         //vai consumir as mensagens de forma assíncrona
-        channel.basicConsume(this.PID, false, deliverCallback, consumerTag -> { });
+        channel.basicConsume(this.PID, true, deliverCallback, consumerTag -> { });
     }
 
     public void sendDirectMessage(String user, String messagem) throws Exception {
@@ -105,6 +109,8 @@ public class Client {
     public void menuDisplay() throws Exception{
         Scanner ler = new Scanner(System.in);
         int op;
+        String user;
+        String message;
 
         while(true) {
             System.out.println("1.Enviar mensagem a todos os usuários");
@@ -112,10 +118,20 @@ public class Client {
             System.out.println("3.Enviar mensagem a um usuário");
 
             op = ler.nextInt();
+            //não le o \n, então consome o \n logo depois
+            ler.nextLine();
 
             switch (op) {
                 case 1:
                     sendBroadcastMessage("teste");
+                    break;
+                case 3:
+                    System.out.print("Digite o nome do usuário: ");
+
+                    user = ler.nextLine();
+                    System.out.print("Digite a mensagem: ");
+                    message = ler.nextLine();
+                    sendDirectMessage(user, message);
                     break;
                 default:
                     System.out.println("Opção Invalida!");
