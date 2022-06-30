@@ -78,7 +78,7 @@ public class Client {
             try {
                 //escreve num arquivo
                 FileWriter fw = new FileWriter(this.history, false);
-                fw.write("broadcast: " + message + "\n");
+                fw.write("Broadcast: " + message + "\n");
                 fw.flush();
                 fw.close();
             }
@@ -138,7 +138,7 @@ public class Client {
         while( br.ready() ){
             //lê a proxima linha
             String linha = br.readLine();
-            System.out.print(linha);
+            System.out.println(linha);
             //faz algo com a linha
         }
 
@@ -147,11 +147,69 @@ public class Client {
         fr.close();
     }
 
+    public void prepareTopic(String topics[]) throws Exception{
+        final String EXCHANGE_NAME = "topic";
+        channel.exchangeDeclare(EXCHANGE_NAME, "direct");
+        /*Quando inicia send primeiro
+        erro : channel error; protocol method: #method<channel.close>(reply-code=404, reply-text=NOT_FOUND - no exchange 'broadcast' in vhost '/', class-id=50, method-id=20)*/
+        //preparar uma fila para receber o broadcast
+        String queueName = PID + "topic";
+        //declara a fila
+        this.channel.queueDeclare(queueName, false, false, false, null);
+
+        //anexa a fila a exchange "topic"
+        for (String topic : topics)
+            this.channel.queueBind(queueName, EXCHANGE_NAME, topic);
+
+        //função que executara para consumir a mensagem
+        DeliverCallback deliverCallback = (consumerTag, delivery) -> {
+            String message = new String(delivery.getBody(), "UTF-8");
+//            System.out.println(" [x] Received '" + message + "'");
+
+            try {
+                //escreve num arquivo
+                FileWriter fw = new FileWriter(this.history, false);
+                fw.write("Topic: " + delivery.getEnvelope().getRoutingKey() + ":" + message + "\n");
+                fw.flush();
+                fw.close();
+            }
+            catch (IOException ioException){
+                ioException.printStackTrace();
+            }
+        };
+
+        //falta fazer receber mensagens quando o send iniciar antes
+
+        //vai consumir as mensagens de forma assíncrona
+        channel.basicConsume(queueName, true, deliverCallback, consumerTag -> { });
+
+    }
+
+    public void sendTopicMessage(String topic, String message) throws Exception{
+        String EXCHANGE_NAME = "topic";
+        channel.exchangeDeclare(EXCHANGE_NAME, "direct");
+
+        String severity = topic;
+
+        channel.basicPublish(EXCHANGE_NAME, severity, null, message.getBytes("UTF-8"));
+        System.out.println(" [x] Sent '" + severity + "':'" + message + "'");
+    }
+
+    public void unsubscribeTopic(String topic) throws Exception{
+        try {
+            channel.exchangeDeclarePassive("topic");
+            channel.queueUnbind(PID+"topic", "topic", topic);
+        }catch (IOException ioException){
+            ioException.printStackTrace();
+        }
+    }
+
     public void menuDisplay() throws Exception{
         Scanner ler = new Scanner(System.in);
         int op;
         String user;
         String message;
+        String topic;
 
         while(true) {
             System.out.println("Use CTRL+C para sair.");
@@ -180,6 +238,29 @@ public class Client {
                     System.out.print("Digite a mensagem: ");
                     message = ler.nextLine();
                     sendDirectMessage(user, message);
+                    break;
+
+                case 3:
+                    System.out.print("Digite o nome do tópico: ");
+                    user = ler.nextLine();
+                    System.out.print("Digite a mensagem: ");
+                    message = ler.nextLine();
+                    sendTopicMessage(user, message);
+                    break;
+
+                case 4:
+                    System.out.println("Digite os tópicos de interesse, separados por \";\".");
+                    topic = ler.nextLine();
+                    String topics [] = topic.split(";");
+                    for (String pr : topics)
+                        System.out.println(pr);
+                    prepareTopic(topics);
+                    break;
+
+                case 5:
+                    System.out.print("Digite os tópicos de interesse: ");
+                    topic = ler.nextLine();
+                    unsubscribeTopic(topic);
                     break;
 
                 case 6:
