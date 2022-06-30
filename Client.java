@@ -48,7 +48,6 @@ public class Client {
         this.channel.exchangeBind(this.PID + "broadcast", "broadcast", "");*/
         channel.exchangeDeclare(EXCHANGE_NAME, "fanout");
 
-         message += PID;
         //envia mensagem para a exchange
         channel.basicPublish(EXCHANGE_NAME, "", null, message.getBytes("UTF-8"));
         System.out.println(" [x] Sent '" + message + "'");
@@ -123,7 +122,9 @@ public class Client {
 
             switch (op) {
                 case 1:
-                    sendBroadcastMessage("teste");
+                    System.out.print("Digite a mensagem: ");
+                    message = ler.nextLine();
+                    sendBroadcastMessage(message);
                     break;
                 case 3:
                     System.out.print("Digite o nome do usuário: ");
