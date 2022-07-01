@@ -77,7 +77,7 @@ public class Client {
 
             try {
                 //escreve num arquivo
-                FileWriter fw = new FileWriter(this.history, false);
+                FileWriter fw = new FileWriter(this.history, true);
                 fw.write("Broadcast: " + message + "\n");
                 fw.flush();
                 fw.close();
@@ -105,8 +105,8 @@ public class Client {
             String message = new String(delivery.getBody(), "UTF-8");
 //            System.out.println(" [x] Received direct '" + message + "'");
             try {
-                //escreve num arquivo
-                FileWriter fw = new FileWriter(this.history, false);
+//                escreve num arquivo
+                FileWriter fw = new FileWriter(this.history, true);
                 fw.write(message + "\n");
                 fw.flush();
                 fw.close();
@@ -168,8 +168,8 @@ public class Client {
 
             try {
                 //escreve num arquivo
-                FileWriter fw = new FileWriter(this.history, false);
-                fw.write("Topic: " + delivery.getEnvelope().getRoutingKey() + ":" + message + "\n");
+                FileWriter fw = new FileWriter(this.history, true);
+                fw.write("Topic: " + delivery.getEnvelope().getRoutingKey() + ":" + message + "%n");
                 fw.flush();
                 fw.close();
             }
