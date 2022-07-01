@@ -1,7 +1,7 @@
 # rabbitmqChat
 
 Matheus Vieira de Souza, 
-Victor Lelis Soares
+Victor Lelis Soares.
 
 
 
@@ -30,6 +30,9 @@ javac -cp amqp-client-5.15.0.jar Send.java Recv.java Client.java
 e para executar:
 
 java -cp .:amqp-client-5.15.0.jar:slf4j-api-1.7.26.jar:slf4j-simple-1.7.26.jar Recv
+
+
+Link para o video de demonstração: https://drive.google.com/file/d/1Ii916Gx9QJxmQyfDJ8yxNpx3yfRMl4Cs/view?usp=sharing
 
 
 

@@ -55,7 +55,7 @@ public class Client {
 
         //envia mensagem para a exchange
         channel.basicPublish(EXCHANGE_NAME, "", null, message.getBytes("UTF-8"));
-        System.out.println(" [x] Sent '" + message + "'");
+       // System.out.println(" [x] Sent '" + message + "'");
     }
 
     public void prepareBroadcast() throws Exception{
@@ -124,10 +124,10 @@ public class Client {
     public void sendDirectMessage(String user, String messagem) throws Exception {
         String QUEUE_NAME = user;
         channel.queueDeclare(QUEUE_NAME, false, false, false, null);
-        String message = "Direct(" + this.PID + "): " + messagem;
+        String message = "Direct(" + QUEUE_NAME + "): " + messagem;
         //envia diretamente para a fila
         channel.basicPublish("", QUEUE_NAME, null, message.getBytes());
-        System.out.println(" [x] Sent '" + message + "'");
+        //System.out.println(" [x] Sent '" + message + "'");
     }
 
     public void displayMessages() throws Exception{
@@ -169,7 +169,7 @@ public class Client {
             try {
                 //escreve num arquivo
                 FileWriter fw = new FileWriter(this.history, true);
-                fw.write("Topic: " + delivery.getEnvelope().getRoutingKey() + ":" + message + "%n");
+                fw.write("Topic: " + delivery.getEnvelope().getRoutingKey() + ":" + message);
                 fw.flush();
                 fw.close();
             }
@@ -192,7 +192,7 @@ public class Client {
         String severity = topic;
 
         channel.basicPublish(EXCHANGE_NAME, severity, null, message.getBytes("UTF-8"));
-        System.out.println(" [x] Sent '" + severity + "':'" + message + "'");
+        //System.out.println(" [x] Sent '" + severity + "':'" + message + "'");
     }
 
     public void unsubscribeTopic(String topic) throws Exception{
